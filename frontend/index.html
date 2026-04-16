@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps App - MongoDB Atlas</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .data-list {
+            margin-top: 2rem;
+            border-top: 1px solid #334155;
+            padding-top: 1.5rem;
+        }
+
+        .data-item {
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent);
+        }
+
+        .data-item h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: var(--accent);
+        }
+
+        .data-item p {
+            margin: 0;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            height: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MongoDB Atlas Data Manager</h1>
+        
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" placeholder="Enter name...">
+        </div>
+        
+        <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" rows="3" placeholder="Enter message..."></textarea>
+        </div>
+        
+        <button onclick="addData()">Add Data Entry</button>
+        <div id="status" class="status"></div>
+
+        <div class="data-list" id="dataList">
+            <!-- Data items will appear here -->
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        async function fetchData() {
+            try {
+                const res = await fetch(`${API_URL}/data`);
+                const data = await res.json();
+                const list = document.getElementById('dataList');
+                list.innerHTML = '';
+                
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'data-item';
+                    div.innerHTML = `
+                        <h3>${item.name}</h3>
+                        <p>${item.message}</p>
+                        <small style="color: #475569; font-size: 0.7rem;">${new Date(item.timestamp).toLocaleString()}</small>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+
+        async function addData() {
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
+            const status = document.getElementById('status');
+
+            if (!name || !message) {
+                status.innerText = "Please fill all fields!";
+                status.style.color = "#f87171";
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, message })
+                });
+                
+                if (res.ok) {
+                    status.innerText = "Added successfully!";
+                    status.style.color = "#10b981";
+                    document.getElementById('name').value = '';
+                    document.getElementById('message').value = '';
+                    fetchData();
+                    setTimeout(() => status.innerText = "", 3000);
+                }
+            } catch (err) {
+                status.innerText = "Error adding data!";
+                status.style.color = "#f87171";
+            }
+        }
+
+        // Initial load
+        fetchData();
+    </script>
+</body>
+</html>

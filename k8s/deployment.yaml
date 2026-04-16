@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: full-stack-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: full-stack-app
+  template:
+    metadata:
+      labels:
+        app: full-stack-app
+    spec:
+      containers:
+      - name: backend
+        image: full-stack-app:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongo-uri
+        - name: PORT
+          value: "5000"
